@@ -303,4 +303,193 @@ function submitReport() {
 
 document.addEventListener('DOMContentLoaded', function() {
     initReportForm();
+    initClaimForms();
 });
+
+/* ===================== 失物认领协同 ===================== */
+
+/**
+ * 统一发起认领协同请求
+ * 网络失败不做本地状态变更，重试由服务端幂等处理，不会覆盖已有候选
+ */
+function claimRequest(formData, btn, busyText) {
+    const originalText = btn ? btn.textContent : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = busyText || '处理中...';
+    }
+
+    return fetch('api/claim.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.code === 0) {
+            showToast(result.msg, 'success');
+            // 重新读取详情：办理状态流转/恢复/变更后，候选列表与详情回到最新阶段
+            window.location.reload();
+            return result;
+        }
+        showToast(result.msg || '操作失败', 'error');
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+        return null;
+    })
+    .catch(error => {
+        console.error('认领操作失败:', error);
+        showToast('网络错误，请稍后重试（重试不会覆盖已提交的申请）', 'error');
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+        return null;
+    });
+}
+
+/* ----- 认领凭证与保管地点登记 ----- */
+function openRegisterModal(messageId, claimProof, keepLocation) {
+    const modal = document.getElementById('registerModal');
+    if (!modal) return;
+    document.getElementById('registerMessageId').value = messageId;
+    document.getElementById('registerProof').value = claimProof || '';
+    document.getElementById('registerLocation').value = keepLocation || '';
+    modal.style.display = 'flex';
+}
+
+function closeRegisterModal() {
+    const modal = document.getElementById('registerModal');
+    if (modal) modal.style.display = 'none';
+}
+
+/* ----- 失主提交认领 / 补充凭证 ----- */
+function openApplyModal(messageId, claimId, name, contact, progress) {
+    const modal = document.getElementById('applyModal');
+    if (!modal) return;
+    document.getElementById('applyMessageId').value = messageId;
+    document.getElementById('applyClaimId').value = claimId || 0;
+    document.getElementById('applyName').value = name || '';
+    document.getElementById('applyContact').value = contact || '';
+    document.getElementById('applyProgress').value = progress || '';
+    const submitBtn = document.getElementById('applySubmitBtn');
+    const titleEl = modal.querySelector('h3');
+    if (claimId) {
+        if (titleEl) titleEl.textContent = '📝 补充认领凭证';
+        submitBtn.textContent = '补充凭证';
+    } else {
+        if (titleEl) titleEl.textContent = '🙋 提交认领申请';
+        submitBtn.textContent = '提交认领';
+    }
+    modal.style.display = 'flex';
+}
+
+function closeApplyModal() {
+    const modal = document.getElementById('applyModal');
+    if (modal) modal.style.display = 'none';
+}
+
+/* ----- 发布者驳回 ----- */
+function openReviewModal(claimId, reviewAction) {
+    const modal = document.getElementById('reviewModal');
+    if (!modal) return;
+    const section = document.getElementById('claimSection');
+    document.getElementById('reviewMessageId').value = section ? section.dataset.messageId : '';
+    document.getElementById('reviewClaimId').value = claimId;
+    document.getElementById('reviewNote').value = '';
+    modal.style.display = 'flex';
+}
+
+function closeReviewModal() {
+    const modal = document.getElementById('reviewModal');
+    if (modal) modal.style.display = 'none';
+}
+
+/**
+ * 发布者核验（确认/恢复）或失主撤回等无需弹窗的操作
+ */
+function claimAction(btn, reviewAction, claimId) {
+    const section = document.getElementById('claimSection');
+    if (!section) return;
+
+    if (reviewAction === 'withdraw' && !window.confirm('确定撤回您的认领申请吗？')) {
+        return;
+    }
+    if (reviewAction === 'restore' && !window.confirm('恢复后该申请将回到待核验阶段，确定吗？')) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('message_id', section.dataset.messageId);
+    formData.append('claim_id', claimId);
+    formData.append('action', 'review');
+    formData.append('review_action', reviewAction);
+
+    if (reviewAction === 'withdraw') {
+        formData.set('action', 'withdraw');
+        formData.delete('review_action');
+    }
+
+    const busyTextMap = {confirm: '确认中...', reject: '驳回中...', restore: '恢复中...', withdraw: '撤回中...'};
+    claimRequest(formData, btn, busyTextMap[reviewAction] || '处理中...');
+}
+
+function initClaimForms() {
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            formData.append('action', 'register');
+            claimRequest(formData, document.getElementById('registerSubmitBtn'), '保存中...');
+        });
+    }
+
+    const applyForm = document.getElementById('applyForm');
+    if (applyForm) {
+        applyForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // 凭证不完整也允许提交：服务端登记为候选并停在待核验状态
+            const formData = new FormData(this);
+            const isSupplement = parseInt(document.getElementById('applyClaimId').value, 10) > 0;
+            if (isSupplement) {
+                // 补充凭证时三项必须齐全，否则仍停在待核验
+                const name = document.getElementById('applyName').value.trim();
+                const contact = document.getElementById('applyContact').value.trim();
+                const progress = document.getElementById('applyProgress').value.trim();
+                if (!name || !contact || !progress) {
+                    showToast('请补全称呼、联系方式和认领说明', 'warning');
+                    return;
+                }
+                formData.append('action', 'supplement');
+            } else {
+                formData.append('action', 'apply');
+            }
+            claimRequest(formData, document.getElementById('applySubmitBtn'),
+                isSupplement ? '补充中...' : '提交中...');
+        });
+    }
+
+    const reviewForm = document.getElementById('reviewForm');
+    if (reviewForm) {
+        reviewForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            formData.append('action', 'review');
+            formData.append('review_action', 'reject');
+            claimRequest(formData, document.getElementById('reviewSubmitBtn'), '驳回中...');
+        });
+    }
+
+    // 点击遮罩关闭弹窗
+    ['registerModal', 'applyModal', 'reviewModal'].forEach(function(id) {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) this.style.display = 'none';
+            });
+        }
+    });
+}

@@ -833,3 +833,231 @@ a:hover { color: var(--primary-dark); }
         display: none;
     }
 }
+
+/* ========== 失物认领协同 ========== */
+.claim-card {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 24px;
+    margin-top: 20px;
+}
+
+.claim-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.claim-title {
+    font-size: 1.2rem;
+    color: var(--gray-800);
+}
+
+.claim-stage-badge {
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: .82rem;
+    font-weight: 600;
+}
+
+.stage-none { background: var(--gray-100); color: var(--gray-600); }
+.stage-waiting { background: #dbeafe; color: #1e40af; }
+.stage-verifying { background: #fef3c7; color: #92400e; }
+.stage-confirmed { background: #d1fae5; color: #065f46; }
+
+.claim-info {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: var(--gray-50);
+    border-radius: var(--radius-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.claim-info-item { display: flex; flex-direction: column; gap: 4px; }
+.claim-info-label {
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--gray-700);
+}
+.claim-info-item p { font-size: .9rem; color: var(--gray-800); line-height: 1.6; }
+
+.claim-register-entry {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: #eef2ff;
+    border-radius: var(--radius-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.claim-tip { font-size: .9rem; color: var(--gray-600); line-height: 1.6; }
+
+.claim-apply { margin-top: 18px; }
+
+.claim-my {
+    padding: 14px 16px;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.claim-my h3,
+.claim-candidates h3,
+.claim-logs h3 {
+    font-size: 1rem;
+    color: var(--gray-800);
+    margin-bottom: 4px;
+}
+
+.claim-time, .candidate-time {
+    font-size: .78rem;
+    color: var(--gray-400);
+    margin-left: 8px;
+}
+
+.claim-progress-text, .candidate-progress {
+    font-size: .9rem;
+    color: var(--gray-700);
+    line-height: 1.6;
+}
+
+.claim-review-note {
+    font-size: .84rem;
+    color: #92400e;
+    background: #fffbeb;
+    padding: 8px 10px;
+    border-radius: 6px;
+    line-height: 1.5;
+}
+
+.candidate-contact { font-size: .84rem; color: var(--gray-500); }
+
+.claim-candidates { margin-top: 22px; }
+
+.claim-count {
+    font-size: .8rem;
+    font-weight: 400;
+    color: var(--gray-500);
+    margin-left: 6px;
+}
+
+.claim-empty {
+    margin-top: 10px;
+    padding: 18px;
+    text-align: center;
+    font-size: .88rem;
+    color: var(--gray-400);
+    background: var(--gray-50);
+    border-radius: var(--radius-sm);
+}
+
+.candidate-list { list-style: none; display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
+
+.candidate-item {
+    border: 1px solid var(--gray-200);
+    border-left-width: 4px;
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.candidate-pending { border-left-color: var(--warning); }
+.candidate-approved { border-left-color: var(--success); background: #f0fdf4; }
+.candidate-rejected { border-left-color: var(--danger); background: #fef2f2; }
+.candidate-withdrawn { border-left-color: var(--gray-400); background: var(--gray-50); opacity: .85; }
+
+.candidate-head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.candidate-order {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: var(--primary);
+    color: #fff;
+    font-size: .75rem;
+    font-weight: 600;
+}
+
+.candidate-name { font-weight: 600; color: var(--gray-800); font-size: .92rem; }
+
+.claim-status-tag {
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: .76rem;
+    font-weight: 600;
+}
+
+.claim-status-tag.claim-pending { background: #fef3c7; color: #92400e; }
+.claim-status-tag.claim-approved { background: #d1fae5; color: #065f46; }
+.claim-status-tag.claim-rejected { background: #fee2e2; color: #991b1b; }
+.claim-status-tag.claim-withdrawn { background: var(--gray-200); color: var(--gray-600); }
+
+.candidate-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.claim-logs { margin-top: 22px; }
+
+.claim-log-list { list-style: none; margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+
+.claim-log-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--gray-50);
+    border-radius: 6px;
+    font-size: .82rem;
+}
+
+.claim-log-time { color: var(--gray-400); }
+.claim-log-action { font-weight: 600; color: var(--gray-700); }
+.claim-log-flow { color: var(--gray-500); }
+.claim-log-note { color: var(--gray-600); flex-basis: 100%; line-height: 1.5; }
+
+.modal-sm { max-width: 460px; }
+
+@media (max-width: 480px) {
+    .claim-card { padding: 16px; }
+    .candidate-time { margin-left: 0; flex-basis: 100%; }
+}
+
+.claim-status-tag.claim-incomplete {
+    background: #ffedd5;
+    color: #c2410c;
+    border: 1px dashed #fb923c;
+}
+
+/* 列表卡片上的失物认领阶段徽标 */
+.card-claim-stage {
+    margin-left: auto;
+    margin-right: 10px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: .74rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.card-header .card-claim-stage + .card-time { margin-left: 0; }

@@ -44,6 +44,9 @@ $messages = $stmt->fetchAll();
 $favoritedIds = getFavoritedMessageIds();
 $favoritedIds = array_flip($favoritedIds);
 
+// 失物招领留言的最新办理阶段（与详情同源推导）
+$claimStageMap = getClaimStageMap(array_column($messages, 'id'));
+
 // 滚动数据（最新5条）
 $scrollStmt = $db->query("SELECT id, type, title, created_at FROM messages WHERE status = 1 ORDER BY created_at DESC LIMIT 8");
 $scrollMessages = $scrollStmt->fetchAll();
@@ -136,6 +139,12 @@ include __DIR__ . '/includes/header.php';
                 <a href="detail.php?id=<?= $msg['id'] ?>" class="card-link">
                     <div class="card-header">
                         <span class="card-type type-<?= $msg['type'] ?>"><?= getTypeIcon($msg['type']) ?> <?= getTypeLabel($msg['type']) ?></span>
+                        <?php if ($msg['type'] === 'lost' && isset($claimStageMap[$msg['id']])): ?>
+                        <span class="card-claim-stage stage-<?= cleanInput($claimStageMap[$msg['id']]['stage']) ?>">
+                            🤝 <?= cleanInput($claimStageMap[$msg['id']]['label']) ?>
+                            （<?= $claimStageMap[$msg['id']]['candidate_count'] ?> 人申请）
+                        </span>
+                        <?php endif; ?>
                         <span class="card-time"><?= timeAgo($msg['created_at']) ?></span>
                     </div>
                     <h3 class="card-title"><?= cleanInput($msg['title']) ?></h3>
