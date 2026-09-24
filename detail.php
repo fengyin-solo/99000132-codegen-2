@@ -23,6 +23,15 @@ if (!$msg) {
     exit;
 }
 
+// 失物认领协同快照（认领进度与候选列表在同一读取事务中返回，始终一致）
+$isPublisher = false;
+$claim = null;
+if ($msg['type'] === 'lost') {
+    $visitorId = getVisitorId();
+    $isPublisher = $msg['visitor_id'] !== null && $msg['visitor_id'] === $visitorId;
+    $claim = getClaimSnapshot($msg['id'], $visitorId, $isPublisher);
+}
+
 $pageTitle = cleanInput($msg['title']) . ' - 社区便民留言板';
 $currentPage = '';
 $cssPath = 'assets/css/style.css';
@@ -79,6 +88,10 @@ include __DIR__ . '/includes/header.php';
     </div>
 </section>
 
+<?php if ($msg['type'] === 'lost' && $claim !== null): ?>
+<?php include __DIR__ . '/includes/claim_panel.php'; ?>
+<?php endif; ?>
+
 <!-- 举报弹窗 -->
 <div class="modal" id="reportModal" style="display:none;">
     <div class="modal-content">
@@ -132,3 +145,6 @@ include __DIR__ . '/includes/header.php';
 </div>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
+<?php if ($msg['type'] === 'lost'): ?>
+<script src="assets/js/claim.js"></script>
+<?php endif; ?>
